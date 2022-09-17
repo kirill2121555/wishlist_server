@@ -128,7 +128,7 @@ class UserController {
         arrwish.push(wish)
       }
       
-      const link = process.env.URL_FRONT +'addfriend?email='+ user.email
+      const link = process.env.URL_FRONT +'addfriend/'+ user.email
       const qrr = await qr.toDataURL(link)
   
       return res.status(200).json([user, qrr, arrwish])
