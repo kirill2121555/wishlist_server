@@ -6,7 +6,7 @@ const UserSchema=new Schema({
     activateLink:{type:String},
     isActivate:{type:Boolean,default:false},
     nick:{type:String,required: true },
-    birthday:{type:Date},
+    birthday:{type:Date,index: true},
     wish:[{type:Schema.Types.ObjectId, ref:'Wish'}],
     friends:[{type:Schema.Types.ObjectId, ref:'User'}],
 })

@@ -2,14 +2,15 @@ const nodemailer = require('nodemailer')
 
 class MailService {
     async sendActivationMail(to, link) {
+        console.log(to, link,process.env.USER)
         try {
             let transporter = nodemailer.createTransport({
                 host: "smtp.mail.ru",
                 port: 465,
                 secure: true,
                 auth: {
-                    user: 'soninnomok@mail.ru',
-                    pass: 'rHykDd6idG0vTv5Gfyuz'
+                    user: process.env.USER,
+                    pass: process.env.PASS
                 },
             });
 
@@ -17,7 +18,7 @@ class MailService {
                 from: 'soninnomok@mail.ru',
                 to: to,
                 subject: "Hi",
-                text: "Podtverdi akaynt",
+                text: "Verify your account",
                 html: `
                     <div>
                         <b>Activation url</b><br>
@@ -25,6 +26,7 @@ class MailService {
                     </div>`
             });
         } catch (e) {
+            console.log(e)
         }
     }
 

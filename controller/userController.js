@@ -21,28 +21,21 @@ const generateJwt = (id, email) => {
 class UserController {
   async registration(req, res, next) {
     try {
-
-      const { email, password, nick } = req.body
+      const { email, password, nick ,date} = req.body
       if (!email || !password) {
         return next(ApiError.badRequest('Некорректный email или password'))
       }
-      console.log('w')
-
-      const candidate = await userModel.findOne({ email: email })
+      const candidate = await userModel.findOne({ email: email },{email:1}).lean()
       if (candidate) {
         return next(ApiError.badRequest('Пользователь с таким email уже существует'))
       }
-
       const hashPassword = await bcrypt.hash(password, 5)
       const activateLink = uuid.v4()
-
-      const user = await userModel.create({ email, password: hashPassword, activateLink: activateLink, nick: nick })
-      console.log(user.id)
-
+      const user = await userModel.create({ email, password: hashPassword, activateLink: activateLink, nick: nick,birthday: date })
+      
       const token = generateJwt(user.id, user.email)
-      console.log('sad')
 
-      // await mailService.sendActivationMail(email, `${process.env.API_URL}/api/activate/${activateLink}`)
+      await mailService.sendActivationMail(email, `${process.env.API_URL}/activate/${activateLink}`)
       return res.status(200).json({ token })
     } catch (e) {
       return res.status(400).json('error')
@@ -51,10 +44,8 @@ class UserController {
 
   async login(req, res, next) {
     try {
-      console.log('asdsa')
       const { email, password } = req.body
-      console.log(email, password)
-      const user = await userModel.findOne({ email: email })
+      const user = await userModel.findOne({ email: email }).lean()
       if (!user) {
         return next(ApiError.internal('Пользователь не найден'))
       }
@@ -65,24 +56,16 @@ class UserController {
       if (!comparePassword) {
         return next(ApiError.internal('Указан неверный пароль'))
       }
-      console.log('sssss')
-
-      const token = generateJwt(user.id, user.email)
-      console.log('token', token)
-
+      
+      const token = generateJwt(user._id, user.email)
       return res.json({ token })
     } catch (error) {
-      logger.error('Error in login function');
       return res.status(400).json('error')
     }
   }
 
   async check(req, res) {
     try {
-      // console.log('req.user.id, req.user.email')
-
-      // console.log(req.user.id, req.user.email)
-
       const token = generateJwt(req.user.id, req.user.email, req.user.role, req.user.nick)
       return res.json({ token })
     } catch (error) {
@@ -90,13 +73,9 @@ class UserController {
     }
   }
 
-
-
-
-  async logout(req, res, next) {
+  async logout(req, res) {
     try {
       const { refreshToken } = req.cookies;
-      const token = await userService.logout(refreshToken);
       res.clearCookie('refreshToken');
       return res.json(token);
     } catch (e) {
@@ -105,7 +84,7 @@ class UserController {
     }
   }
 
-  async activate(req, res, next) {
+  async activate(req, res) {
     try {
       const activationLink = req.params.link
       await userService.activate(activationLink)
@@ -116,33 +95,33 @@ class UserController {
   }
   async profil(req, res) {
     try {
-      const id = await userService.getId(req)
+      console.log('req',req.headers.authorization)
 
-      const user = await userModel.findById(id, { nick: 1, wish: 1,email:1 }).lean()
+      const id = await userService.getId(req)
+      console.log('id=== ',id)
+
+      const user = await userModel.findById(id)
+      console.log(user)
       if (!user) {
         return res.status(400).json('user not found')
       }
       const arrwish = []
       for (let i = 0; i < user.wish.length; i++) {
-        let wish = await wishModel.findById(user.wish[i])
+        let wish = await wishModel.findById(user.wish[i]).lean()
         arrwish.push(wish)
       }
-      
       const link = process.env.URL_FRONT +'addfriend/'+ user.email
       const qrr = await qr.toDataURL(link)
-  
       return res.status(200).json([user, qrr, arrwish])
     } catch (e) {
       return res.status(400).json('error')
     }
   }
 
-
   async myfriend(req, res) {
     try {
       const id = userServise.getId(req)
       const friends = await userModel.findById({ id }, { friends }).lean()
-      console.log('user========', friends)
       if (!friends) {
         return res.status(400).json('friends not found')
       }
@@ -151,14 +130,11 @@ class UserController {
         let friend = await userModel.findById({ _id: friends[i] }, { nick }).lean()
         arrfriends.push(friend)
       }
-      console.log('friendsArr====', arrfriends)
       return res.status(200).json(arrfriends)
     } catch (e) {
       return res.status(400).json('error')
     }
   }
-
-
 }
 
 module.exports = new UserController();

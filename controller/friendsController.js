@@ -1,12 +1,9 @@
 const userModel = require("../model/userModel");
 const wishModel = require("../model/wishModel");
-
 const userServise = require("../services/userServise");
-const qr = require('qrcode')
 
 
 class UserController {
-
     async myfriends(req, res) {
         try {
             const id = await userServise.getId(req)
@@ -17,11 +14,23 @@ class UserController {
                 person = await userModel.findById(user.friends[i], { nick: 1, birthday: 1 }).lean()
                 friend.push(person)
             }
-            console.log(friend)
-            return res.status(200).json(friend)
+            const datanow = new Date()
+            const now = (datanow.getMonth() * 30.417) + datanow.getDate()
+            const aa = friend.sort((a, b) => a.birthday - b.birthday)
+            let posishen
+            for (let i = 0; i < aa.length; i++) {
+                if (((aa[i].birthday.getMonth() * 30.417) + aa[i].birthday.getDate()) > now) {
+                    posishen = i;
+                    break;
+                }
+            }
+            const notsoon = aa.slice(0, posishen)
+            const soon = aa.slice(posishen)
+            const friends = [...soon, ...notsoon];
+            return res.status(200).json(friends)
         } catch (e) {
+            console.log('error ', e)
             return res.status(400).json('error')
-
         }
     }
 
@@ -45,7 +54,7 @@ class UserController {
         try {
             const userid = await userServise.getId(req)
             const { email } = req.query
-            const friend = await userModel.findOne({ email })
+            const friend = await userModel.findOne({ email }, { _id: 1 }).lean()
             if (!friend) {
                 return res.status(400).json('usera net')
             }
@@ -65,7 +74,7 @@ class UserController {
         try {
             const { id } = req.params
             const iduser = await userServise.getId(req)
-            const user = await userModel.updateOne({ _id: iduser }, { $pull: { friends: id } })
+            await userModel.updateOne({ _id: iduser }, { $pull: { friends: id } })
             return res.status(200).json('deleted')
         } catch (e) {
             console.log('erroee = ', e)
@@ -74,21 +83,6 @@ class UserController {
         }
     }
 
-    async qrcode(req, res) {
-        try {
-            const id = await userServise.getId(req)
-            const user = await userModel.findById(id)
-            const link = process.env.URL_FRONT + user.email
-            console.log(link)
-            return await qr.toDataURL(link)
-        } catch (err) {
-            return res.status(400).json('error')
-        }
-    }
-    async o(req,res){
-        return res.status(200).json('hi')
-
-    }
 }
 
 module.exports = new UserController();
