@@ -35,7 +35,7 @@ class UserController {
       
       const token = generateJwt(user.id, user.email)
 
-      await mailService.sendActivationMail(email, `${process.env.API_URL}/activate/${activateLink}`)
+      //await mailService.sendActivationMail(email, `${process.env.API_URL}/activate/${activateLink}`)
       return res.status(200).json({ token })
     } catch (e) {
       return res.status(400).json('error')
