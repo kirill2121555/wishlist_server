@@ -11,7 +11,7 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(cors({ credentials: true, origin: 'https://wishlist-client.vercel.app' }));//
+app.use(cors({ credentials: true, origin: 'https://wishlist-client.vercel.app' }));//https://wishlist-client.vercel.app http://localhost:3000
 app.use('/', routers)
 
 const start = async () => {

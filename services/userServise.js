@@ -23,10 +23,8 @@ class UserService {
                 return res.status(401).json({ message: "Не авторизован" })
             }
             const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET)
-            console.log(decoded)
             req.user = decoded
             const id = req.user.id
-            console.log(id)
 
             return id
         }

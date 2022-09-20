@@ -2,7 +2,6 @@ const nodemailer = require('nodemailer')
 
 class MailService {
     async sendActivationMail(to, link) {
-        console.log(to, link,process.env.USER)
         try {
             let transporter = nodemailer.createTransport({
                 host: "smtp.mail.ru",

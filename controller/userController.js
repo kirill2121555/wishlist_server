@@ -95,13 +95,8 @@ class UserController {
   }
   async profil(req, res) {
     try {
-      console.log('req',req.headers.authorization)
-
       const id = await userService.getId(req)
-      console.log('id=== ',id)
-
       const user = await userModel.findById(id)
-      console.log(user)
       if (!user) {
         return res.status(400).json('user not found')
       }
